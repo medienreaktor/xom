@@ -11,7 +11,9 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
 {
 	const CACHE_LIFETIME_TOKEN = 3600; // 1 hour
 	const CACHE_LIFETIME_GENERAL = 86400; // 1 day
+
 	const CACHE_IDENTIFIER_TOKEN = 'token';
+	const CACHE_PREFIX_REQUEST = 'request';
 
 	protected $configuration;
 	protected $cache;
@@ -30,14 +32,29 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
 		$this->configuration = $configuration;
 	}
 
-	protected function apiCall($method, $identifier = NULL, $params = [])
+	protected function apiCall($method, $identifier = NULL, $params = [], $localized = TRUE, $cached = TRUE)
 	{
         if ( ! $params['format']) $params['format'] = 'object';
+		if ($localized) $params['locale'] = $this->getLocale();
+
+		if ($cached) {
+			$cacheIdentifier = $this->calculateCacheIdentifier([$method, $identifier, $params], self::CACHE_PREFIX_REQUEST, TRUE);
+
+			if ($this->cache->get($cacheIdentifier)) {
+	            return $this->cache->get($cacheIdentifier);
+	        }
+		}
 
         $response = $this->rawApiCall($method, $identifier, $params);
 
         if ($response) {
-            return json_decode($response, TRUE);
+            $response = json_decode($response, TRUE);
+
+			if ($cached) {
+				$this->cache->set($cacheIdentifier, $response, ['xom'], self::CACHE_LIFETIME_GENERAL);
+			}
+
+			return $response;
         }
 
         return FALSE;
@@ -66,13 +83,13 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
                 return $contents;
             }
         } catch (\Exception $e) {
-
+			echo $e->getMessage();
         }
 
         return FALSE;
     }
 
-    private function getToken()
+    protected function getToken()
     {
         if ($this->cache->get(self::CACHE_IDENTIFIER_TOKEN)) {
             return $this->cache->get(self::CACHE_IDENTIFIER_TOKEN);
@@ -100,9 +117,31 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
                 return $token;
             }
         } catch (\Exception $e) {
-
+			echo $e->getMessage();
         }
 
         return FALSE;
     }
+
+	protected function getLocale()
+	{
+		if ($GLOBALS['TYPO3_REQUEST']->getAttribute('siteLanguage')) {
+			return $GLOBALS['TYPO3_REQUEST']->getAttribute('siteLanguage')->getTwoLetterIsoCode();
+		}
+
+		return $GLOBALS['TYPO3_REQUEST']->getAttribute('language')->getTwoLetterIsoCode();
+	}
+
+	protected function calculateCacheIdentifier($data, $prefix = NULL, $hash = FALSE) {
+		if (is_array($data)) {
+			$data = json_encode($data);
+		}
+		if ($hash) {
+			$data = sha1($data);
+		}
+		if ($prefix) {
+			$data = $prefix.'-'.$data;
+		}
+		return $data;
+	}
 }
