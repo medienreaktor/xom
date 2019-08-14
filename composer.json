@@ -1,0 +1,16 @@
+{
+    "name": "medienreaktor/xom",
+    "description": "xom",
+    "authors": [
+        {
+            "name": "medienreaktor GmbH",
+            "email": "info@medienreaktor.de"
+        }
+    ],
+    "type": "typo3-cms-extension",
+    "autoload": {
+        "psr-4": {
+            "Medienreaktor\\Xom\\": "Classes/"
+        }
+    }
+}
