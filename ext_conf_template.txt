@@ -1,0 +1,11 @@
+# cat=basic//10; type=string; label=xom API Endpoint
+apiEndpoint =
+
+# cat=basic//20; type=string; label=xom OAuth Endpoint
+apiOAuthEndpoint =
+
+# cat=basic//30; type=string; label=xom API Client ID
+apiClientId =
+
+# cat=basic//40; type=string; label=xom API Client Secret
+apiClientSecret =

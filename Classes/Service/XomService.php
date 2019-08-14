@@ -17,12 +17,18 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
 	protected $cache;
 	protected $requestFactory;
 
-	public function __construct(array $configuration)
+	public function __construct()
     {
-		$this->configuration = $configuration;
-		$this->cache = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Cache\CacheManager::class)->getCache('xom_assets');
+		$this->configuration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['xom']);
+
+		$this->cache = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Cache\CacheManager::class)->getCache('xom');
 		$this->requestFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Http\RequestFactory::class);
     }
+
+	public function setConfiguration($configuration)
+	{
+		$this->configuration = $configuration;
+	}
 
 	protected function apiCall($method, $identifier = NULL, $params = [])
 	{
