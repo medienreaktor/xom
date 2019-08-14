@@ -32,7 +32,7 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
 
 	protected function apiCall($method, $identifier = NULL, $params = [])
 	{
-        if ( ! $params['format']) $params['format'] = 'property';
+        if ( ! $params['format']) $params['format'] = 'object';
 
         $response = $this->rawApiCall($method, $identifier, $params);
 
@@ -48,7 +48,12 @@ class XomService implements \TYPO3\CMS\Core\SingletonInterface
         if (isset($identifier)) {
             $identifier = rawurlencode($identifier);
             $method = str_replace('{id}', $identifier, $method);
-        }
+        } else {
+			// method contains {id}, but identifier is not set
+			if (strpos($method, '{id}') !== FALSE) {
+				return FALSE;
+			}
+		}
 
         try {
             $params['access_token'] = $this->getToken();
